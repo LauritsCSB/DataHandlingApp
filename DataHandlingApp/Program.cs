@@ -13,7 +13,7 @@ namespace SQLite_project
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
-                    SELECT address
+                    SELECT address, id
                     FROM soil_data
                     WHERE region = 'Nordjylland'
                 ";
@@ -33,9 +33,14 @@ namespace SQLite_project
 
                 }
 
-                for (int index = 0; index < oldAddressList.Count; index++)
+                /*foreach (var id in idList)
                 {
-                    Console.WriteLine(oldAddressList[index]);
+                    Console.WriteLine(id);
+                }*/
+
+                for (int oldAddressIndex = 0; oldAddressIndex < oldAddressList.Count; oldAddressIndex++)
+                {
+                    Console.WriteLine(oldAddressList[oldAddressIndex]);
 
                     Console.WriteLine("Enter new address without city name: ");
                     newAddressList.Add(Console.ReadLine());
@@ -46,26 +51,19 @@ namespace SQLite_project
                     Console.Clear();
                 }
 
-                /*foreach (var item in newAddressList)
+                /*for (int i = 0; i < cityList.Count; i++)
                 {
-                    Console.WriteLine(item);
-                }
-
-                
-                foreach (var item in cityList)
-                {
-                    Console.WriteLine(item);
+                    Console.WriteLine($"{idList[i]}. {newAddressList[i]} {cityList[i]}.");
                 }*/
 
-                for (int cityIndex = 0; cityIndex <= cityList.Count; cityIndex++)
+                for (int cityIndex = 0; cityIndex < cityList.Count; cityIndex++)
                 {
 
                     command.CommandText =
                     $@"
-                        UPDATE soil_data
-                        SET city = {cityList[cityIndex]}
+                        INSERT INTO soil_data (address, city)
+                        VALUES ('{newAddressList[cityIndex]}', '{cityList[cityIndex]}')
                         WHERE id = {cityIndex + 1}
-                    
                     ";
                 }
             }
