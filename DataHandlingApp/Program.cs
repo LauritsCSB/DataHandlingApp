@@ -6,66 +6,66 @@ namespace SQLite_project
     {
         static void Main()
         { 
-            using (var connection = new SqliteConnection("Data Source=/Users/Cecilie/Projects/WineAppDataFile.sqlite"))
+            List<int> idList = new List<int>();
+            List<string> wineyardNameList = new List<string>();
+            List<string> addressList = new List<string>();
+            List<string> regionList = new List<string>();
+            List<string> countryList = new List<string>();
+
+            using (var connection = new SqliteConnection("Data Source=/Users/Cecilie/Projects/soil_data_denmark.sqlite"))
             {
                 connection.Open();
 
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
-                    SELECT address, id
-                    FROM soil_data
-                    WHERE region = 'Nordjylland'
+                    SELECT name
+                    FROM soil_data_denmark
                 ";
-
-                List<string> oldAddressList = new List<string>();
-                List<string> newAddressList = new List<string>();
-                List<string> cityList = new List<string>();
 
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        var address = reader.GetString(0);
+                        var wineyardName = reader.GetString(0);
 
-                        oldAddressList.Add(address);
+                        wineyardNameList.Add(wineyardName);
                     }
 
                 }
 
-                /*foreach (var id in idList)
+                int idNumber = 1;
+
+                for (int nameIndex = 0; nameIndex < wineyardNameList.Count; nameIndex++)
                 {
-                    Console.WriteLine(id);
-                }*/
-
-                for (int oldAddressIndex = 0; oldAddressIndex < oldAddressList.Count; oldAddressIndex++)
-                {
-                    Console.WriteLine(oldAddressList[oldAddressIndex]);
-
-                    Console.WriteLine("Enter new address without city name: ");
-                    newAddressList.Add(Console.ReadLine());
-
-                    Console.WriteLine("Enter city name from current address: ");
-                    cityList.Add(Console.ReadLine());
-
-                    Console.Clear();
+                    idList.Add(idNumber);
+                    idNumber++;
                 }
 
-                /*for (int i = 0; i < cityList.Count; i++)
+                /*for (int nameIndex = 0; nameIndex < wineyardNameList.Count; nameIndex++)
                 {
-                    Console.WriteLine($"{idList[i]}. {newAddressList[i]} {cityList[i]}.");
+                    Console.WriteLine($"ID: {idList[nameIndex]}, Name: {wineyardNameList[nameIndex]}");
                 }*/
 
-                for (int cityIndex = 0; cityIndex < cityList.Count; cityIndex++)
+                //Change list before updating new row(s)
+                List<string> defaultList = wineyardNameList;
+                for (int listIndex = 0; listIndex < defaultList.Count; listIndex++)
                 {
 
                     command.CommandText =
-                    $@"
-                        INSERT INTO soil_data (address, city)
-                        VALUES ('{newAddressList[cityIndex]}', '{cityList[cityIndex]}')
-                        WHERE id = {cityIndex + 1}
-                    ";
-                }
+                        @"
+                            INSERT INTO address_data_denmark (id, wineyard_name)
+                            VALUES ($id, $wineyard_name)
+                        ";
+
+                    command.Parameters.AddWithValue("$id", idList[listIndex]);
+                    command.Parameters.AddWithValue("$wineyard_name", wineyardNameList[listIndex]);
+
+                    command.ExecuteNonQuery();
+                };
+
+
+                connection.Close();
             }
         }
     }
