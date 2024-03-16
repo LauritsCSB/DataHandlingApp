@@ -12,10 +12,30 @@ namespace SQLite_project
             List<string> regionList = new List<string>();
             List<string> countryList = new List<string>();
 
-            using (var connection = new SqliteConnection("Data Source=/Users/Cecilie/Projects/soil_data_denmark.sqlite"))
+            string database = "/Users/Cecilie/Projects/soil_data_denmark.sqlite";
+
+            if (!File.Exists(database))
+            {
+                Console.WriteLine("Error locating database.");
+                System.Environment.Exit(1);
+            }
+
+            var connection = new SqliteConnection("Data Source=" + database);
+
+            try
             {
                 connection.Open();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Database Connection Unsuccessfull.");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.HelpLink);
+                System.Environment.Exit(1);
+            }
 
+            try
+            { 
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
@@ -31,40 +51,52 @@ namespace SQLite_project
 
                         wineyardNameList.Add(wineyardName);
                     }
-
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading data.");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.HelpLink);
+                System.Environment.Exit(1);
+            }
 
-                int idNumber = 1;
+            int idNumber = 1;
+            for (int listIndex = 0; listIndex < wineyardNameList.Count; listIndex++)
+            {
+                idList.Add(idNumber);
+                idNumber++;
+            }
 
-                for (int nameIndex = 0; nameIndex < wineyardNameList.Count; nameIndex++)
+            try
+            {
+                var command = connection.CreateCommand();
+                command.CommandText =
+                    @"
+                        INSERT INTO address_data_denmark (id, wineyard_name)
+                        VALUES ($id, $wineyard_name)
+                    ";
+
+                for (int listIndex = 0; listIndex < wineyardNameList.Count; listIndex++)
                 {
-                    idList.Add(idNumber);
-                    idNumber++;
+                    using (var cmd = new SqliteCommand(command.CommandText, connection))
+                    {
+                        cmd.Parameters.AddWithValue("$id", idList[listIndex]);
+                        cmd.Parameters.AddWithValue("$wineyard_name", wineyardNameList[listIndex]);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
-
-                /*for (int nameIndex = 0; nameIndex < wineyardNameList.Count; nameIndex++)
-                {
-                    Console.WriteLine($"ID: {idList[nameIndex]}, Name: {wineyardNameList[nameIndex]}");
-                }*/
-
-                //Change list before updating new row(s)
-                List<string> defaultList = wineyardNameList;
-                for (int listIndex = 0; listIndex < defaultList.Count; listIndex++)
-                {
-
-                    command.CommandText =
-                        @"
-                            INSERT INTO address_data_denmark (id, wineyard_name)
-                            VALUES ($id, $wineyard_name)
-                        ";
-
-                    command.Parameters.AddWithValue("$id", idList[listIndex]);
-                    command.Parameters.AddWithValue("$wineyard_name", wineyardNameList[listIndex]);
-
-                    command.ExecuteNonQuery();
-                };
-
-
+                Console.WriteLine("Data inserted successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error inserting data.");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.HelpLink);
+                System.Environment.Exit(1);
+            }
+            finally
+            {
                 connection.Close();
             }
         }
