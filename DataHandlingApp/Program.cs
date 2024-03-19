@@ -39,7 +39,7 @@ namespace SQLite_project
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
-                    SELECT name
+                    SELECT region, country
                     FROM soil_data_denmark
                 ";
 
@@ -47,9 +47,28 @@ namespace SQLite_project
                 {
                     while (reader.Read())
                     {
-                        var wineyardName = reader.GetString(0);
+                        var regionName = reader.GetString(0);
+                        var countryName = reader.GetString(1);
+                        //what is int ordinal used in these methods?
 
-                        wineyardNameList.Add(wineyardName);
+                        regionList.Add(regionName);
+                        countryList.Add(countryName);
+                    }
+                }
+
+                command.CommandText =
+                    @"
+                        SELECT id
+                        FROM address_data_denmark
+                    ";
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var id = reader.GetInt32(0);
+
+                        idList.Add(id);
                     }
                 }
             }
@@ -61,28 +80,23 @@ namespace SQLite_project
                 System.Environment.Exit(1);
             }
 
-            int idNumber = 1;
-            for (int listIndex = 0; listIndex < wineyardNameList.Count; listIndex++)
-            {
-                idList.Add(idNumber);
-                idNumber++;
-            }
-
             try
             {
                 var command = connection.CreateCommand();
                 command.CommandText =
                     @"
-                        INSERT INTO address_data_denmark (id, wineyard_name)
-                        VALUES ($id, $wineyard_name)
+                        UPDATE address_data_denmark
+                        SET region = $region, country = $country
+                        WHERE id = $id
                     ";
 
-                for (int listIndex = 0; listIndex < wineyardNameList.Count; listIndex++)
+                for (int listIndex = 0; listIndex < regionList.Count; listIndex++)
                 {
                     using (var cmd = new SqliteCommand(command.CommandText, connection))
                     {
+                        cmd.Parameters.AddWithValue("$region", regionList[listIndex]);
+                        cmd.Parameters.AddWithValue("$country", countryList[listIndex]);
                         cmd.Parameters.AddWithValue("$id", idList[listIndex]);
-                        cmd.Parameters.AddWithValue("$wineyard_name", wineyardNameList[listIndex]);
                         cmd.ExecuteNonQuery();
                     }
                 }
