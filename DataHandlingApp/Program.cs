@@ -7,10 +7,11 @@ namespace SQLite_project
         static void Main()
         { 
             List<int> idList = new List<int>();
-            List<string> wineyardNameList = new List<string>();
             List<string> addressList = new List<string>();
-            List<string> regionList = new List<string>();
-            List<string> countryList = new List<string>();
+            List<string> streetAddressList = new List<string>();
+            List<string> houseNumberList = new List<string>();
+            List<string> cityList = new List<string>();
+            List<int> postalCodeList = new List<int>();
 
             string database = "/Users/Cecilie/Projects/soil_data_denmark.sqlite";
 
@@ -39,7 +40,7 @@ namespace SQLite_project
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
-                    SELECT region, country
+                    SELECT address
                     FROM soil_data_denmark
                 ";
 
@@ -47,12 +48,10 @@ namespace SQLite_project
                 {
                     while (reader.Read())
                     {
-                        var regionName = reader.GetString(0);
-                        var countryName = reader.GetString(1);
+                        var address = reader.GetString(0);
                         //what is int ordinal used in these methods?
 
-                        regionList.Add(regionName);
-                        countryList.Add(countryName);
+                        addressList.Add(address);
                     }
                 }
 
@@ -80,22 +79,45 @@ namespace SQLite_project
                 System.Environment.Exit(1);
             }
 
+            for (int listIndex = 0; listIndex < addressList.Count; listIndex++)
+            {
+                Console.WriteLine(addressList[listIndex]);
+                Console.WriteLine("Street address:");
+                streetAddressList.Add(Console.ReadLine());
+
+                Console.WriteLine("House number:");
+                houseNumberList.Add(Console.ReadLine());
+
+                Console.WriteLine("Ciy name:");
+                cityList.Add(Console.ReadLine());
+
+                Console.WriteLine("Postal code:");
+                postalCodeList.Add(Convert.ToInt32(Console.ReadLine()));
+
+                Console.Clear();
+            }
+
             try
             {
                 var command = connection.CreateCommand();
                 command.CommandText =
                     @"
                         UPDATE address_data_denmark
-                        SET region = $region, country = $country
+                        SET street_name = $street_name,
+                            house_number = $house_number,
+                            city = $city,
+                            postal_code = $postal_code
                         WHERE id = $id
                     ";
 
-                for (int listIndex = 0; listIndex < regionList.Count; listIndex++)
+                for (int listIndex = 0; listIndex < idList.Count; listIndex++)
                 {
                     using (var cmd = new SqliteCommand(command.CommandText, connection))
                     {
-                        cmd.Parameters.AddWithValue("$region", regionList[listIndex]);
-                        cmd.Parameters.AddWithValue("$country", countryList[listIndex]);
+                        cmd.Parameters.AddWithValue("$street_name", streetAddressList[listIndex]);
+                        cmd.Parameters.AddWithValue("$house_number", houseNumberList[listIndex]);
+                        cmd.Parameters.AddWithValue("$city", cityList[listIndex]);
+                        cmd.Parameters.AddWithValue("$postal_code", postalCodeList[listIndex]);
                         cmd.Parameters.AddWithValue("$id", idList[listIndex]);
                         cmd.ExecuteNonQuery();
                     }
